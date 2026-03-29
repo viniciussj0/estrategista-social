@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estrategista Social IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #18181f;
+    --border: rgba(255,255,255,0.07);
+    --accent: #c8f564;
+    --accent2: #7c6af5;
+    --text: #efefef;
+    --muted: #666680;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    overflow: hidden;
+  }
+
+  body {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    grid-template-rows: 100vh;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 24px 16px;
+    gap: 20px;
+    overflow-y: auto;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-mark {
+    width: 34px; height: 34px;
+    background: var(--accent);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: #0a0a0f;
+    font-weight: 700;
+  }
+  .logo-name { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; line-height: 1.2; }
+  .logo-sub { font-size: 10px; color: var(--muted); }
+
+  .section-label {
+    font-size: 10px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted);
+    font-family: 'Syne', sans-serif; margin-bottom: 8px;
+  }
+
+  .quick-list { display: flex; flex-direction: column; gap: 5px; }
+  .quick-item {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 9px 11px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+    line-height: 1.4;
+    transition: all .18s;
+  }
+  .quick-item:hover { border-color: var(--accent2); background: rgba(124,106,245,.08); }
+  .quick-item .qlabel { color: var(--muted); font-size: 10px; margin-top: 2px; display: block; }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag {
+    font-size: 11px; padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 20px; color: var(--muted);
+    cursor: pointer; transition: all .18s;
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .tag:hover { border-color: var(--accent); color: var(--accent); background: rgba(200,245,100,.07); }
+
+  /* ── MAIN ── */
+  .main { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+  /* TOPBAR */
+  .topbar {
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .topbar-info { display: flex; align-items: center; gap: 10px; }
+  .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .topbar-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; }
+  .topbar-sub { font-size: 11px; color: var(--muted); }
+  .client-pill {
+    font-size: 11px; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 20px;
+    padding: 5px 13px; display: flex; gap: 6px; align-items: center;
+  }
+  .client-pill span { color: var(--muted); }
+
+  /* MESSAGES */
+  .messages {
+    flex: 1; overflow-y: auto;
+    padding: 24px;
+    display: flex; flex-direction: column; gap: 18px;
+    scroll-behavior: smooth;
+  }
+  .messages::-webkit-scrollbar { width: 3px; }
+  .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .msg { display: flex; gap: 10px; animation: slideUp .25s ease; }
+  @keyframes slideUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+  .msg.user { flex-direction: row-reverse; align-self: flex-end; max-width: 72%; }
+  .msg.agent { max-width: 82%; }
+
+  .av {
+    width: 30px; height: 30px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0;
+  }
+  .av.ai { background: var(--accent); color: #0a0a0f; font-weight: 700; }
+  .av.me { background: var(--accent2); }
+
+  .bbl {
+    padding: 11px 15px;
+    border-radius: 14px;
+    font-size: 13.5px; line-height: 1.75;
+  }
+  .msg.agent .bbl { background: var(--surface2); border: 1px solid var(--border); border-top-left-radius: 3px; }
+  .msg.user .bbl { background: #1e1e30; border: 1px solid var(--border); border-top-right-radius: 3px; }
+
+  .bbl h3 { font-family: 'Syne', sans-serif; font-size: 13px; color: var(--accent); margin: 12px 0 5px; }
+  .bbl h3:first-child { margin-top: 0; }
+  .bbl strong { color: var(--accent); font-weight: 500; }
+  .bbl ul { padding-left: 16px; }
+  .bbl ul li { margin-bottom: 5px; }
+  .bbl hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+
+  .typing-bbl { display: flex; align-items: center; gap: 5px; padding: 12px 15px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: blink .9s infinite; }
+  .dot:nth-child(2){animation-delay:.15s} .dot:nth-child(3){animation-delay:.3s}
+  @keyframes blink { 0%,80%,100%{opacity:.2} 40%{opacity:1} }
+
+  /* INPUT */
+  .input-wrap {
+    padding: 14px 24px 18px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+  .input-box {
+    display: flex; gap: 8px; align-items: flex-end;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 9px 11px;
+    transition: border-color .2s;
+  }
+  .input-box:focus-within { border-color: var(--accent2); }
+  #inp {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px; resize: none; min-height: 22px; max-height: 130px;
+    line-height: 1.6;
+  }
+  #inp::placeholder { color: var(--muted); }
+  #sbtn {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: var(--accent); border: none; cursor: pointer;
+    font-size: 15px; flex-shrink: 0; transition: all .2s;
+    display: flex; align-items: center; justify-content: center;
+    color: #0a0a0f;
+  }
+  #sbtn:hover { background: #d9ff75; transform: scale(1.05); }
+  #sbtn:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+  .hint { text-align: center; font-size: 11px; color: var(--muted); margin-top: 7px; }
+
+  /* MODAL */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.85); backdrop-filter: blur(5px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200; padding: 16px;
+  }
+  .modal {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px; padding: 30px;
+    width: 100%; max-width: 400px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .modal-icon { font-size: 28px; }
+  .modal h2 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 19px; }
+  .modal p { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+  .fld label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .05em; }
+  .fld input, .fld select, .fld textarea {
+    width: 100%; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 9px 12px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none;
+    transition: border-color .2s;
+  }
+  .fld input:focus, .fld select:focus, .fld textarea:focus { border-color: var(--accent2); }
+  .fld textarea { resize: none; height: 65px; }
+  .fld select option { background: #18181f; }
+  .r2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .modal-cta {
+    padding: 12px; background: var(--accent); border: none;
+    border-radius: 12px; font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 14px; cursor: pointer;
+    color: #0a0a0f; transition: background .2s;
+  }
+  .modal-cta:hover { background: #d9ff75; }
+
+  @media(max-width:680px){
+    body { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-icon">🎯</div>
+    <h2>Configure o Cliente</h2>
+    <p>Preencha para que o estrategista crie conteúdos personalizados.</p>
+    <div class="r2">
+      <div class="fld">
+        <label>Nome / Marca</label>
+        <input id="m-name" type="text" placeholder="Ex: Studio Bloom" />
+      </div>
+      <div class="fld">
+        <label>Nicho</label>
+        <select id="m-niche">
+          <option value="">Selecione...</option>
+          <option>Moda & Lifestyle</option>
+          <option>Gastronomia & Restaurantes</option>
+          <option>Saúde & Bem-estar</option>
+          <option>Fitness & Personal</option>
+          <option>Beleza & Estética</option>
+          <option>Negócios & Finanças</option>
+          <option>Educação & Cursos</option>
+          <option>Tecnologia & SaaS</option>
+          <option>Imóveis</option>
+          <option>E-commerce / Produtos</option>
+          <option>Artes & Entretenimento</option>
+          <option>Outro</option>
+        </select>
+      </div>
+    </div>
+    <div class="fld">
+      <label>Objetivo principal</label>
+      <select id="m-goal">
+        <option value="">Selecione...</option>
+        <option>Aumentar seguidores e alcance</option>
+        <option>Gerar leads e vendas</option>
+        <option>Fortalecer autoridade e marca</option>
+        <option>Engajamento e comunidade</option>
+        <option>Lançamento de produto/serviço</option>
+      </select>
+    </div>
+    <div class="fld">
+      <label>Contexto extra (opcional)</label>
+      <textarea id="m-ctx" placeholder="Público-alvo, diferenciais, tom de voz..."></textarea>
+    </div>
+    <button class="modal-cta" onclick="init()">Iniciar Estrategista ✦</button>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">✦</div>
+    <div>
+      <div class="logo-name">Estrategista</div>
+      <div class="logo-sub">Social Media IA</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">Redes & Formatos</div>
+    <div class="tags">
+      <button class="tag" onclick="tag('Instagram')">Instagram</button>
+      <button class="tag" onclick="tag('TikTok')">TikTok</button>
+      <button class="tag" onclick="tag('LinkedIn')">LinkedIn</button>
+      <button class="tag" onclick="tag('YouTube')">YouTube</button>
+      <button class="tag" onclick="tag('Reels')">Reels</button>
+      <button class="tag" onclick="tag('Carrossel')">Carrossel</button>
+      <button class="tag" onclick="tag('Stories')">Stories</button>
+      <button class="tag" onclick="tag('Lives')">Lives</button>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">Atalhos rápidos</div>
+    <div class="quick-list">
+      <button class="quick-item" onclick="quick('Crie um calendário editorial para 1 semana com 5 posts')">
+        📅 Calendário semanal
+        <span class="qlabel">5 posts estratégicos</span>
+      </button>
+      <button class="quick-item" onclick="quick('Crie 10 ideias de Reels virais com gancho, desenvolvimento e CTA')">
+        🎬 10 ideias de Reels
+        <span class="qlabel">Gancho + roteiro + CTA</span>
+      </button>
+      <button class="quick-item" onclick="quick('Quais tendências de conteúdo estão em alta no meu nicho?')">
+        🔥 Tendências do nicho
+        <span class="qlabel">O que está bombando agora</span>
+      </button>
+      <button class="quick-item" onclick="quick('5 ideias de carrossel que geram salvamentos e compartilhamentos')">
+        🃏 Ideias de carrossel
+        <span class="qlabel">Conteúdo que educa</span>
+      </button>
+      <button class="quick-item" onclick="quick('5 pautas de conteúdo que geram autoridade para a marca')">
+        🏆 Conteúdo de autoridade
+        <span class="qlabel">Posicionamento de marca</span>
+      </button>
+      <button class="quick-item" onclick="quick('Crie uma legenda com gancho, corpo e CTA para post de feed')">
+        ✍️ Gerar legenda
+        <span class="qlabel">Copywriting persuasivo</span>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-info">
+      <div class="pulse"></div>
+      <div>
+        <div class="topbar-title">Estrategista de Conteúdo</div>
+        <div class="topbar-sub">Powered by Claude AI</div>
+      </div>
+    </div>
+    <div class="client-pill">
+      <span>Cliente:</span>
+      <strong id="pill-name">—</strong>
+    </div>
+  </div>
+
+  <div class="messages" id="msgs"></div>
+
+  <div class="input-wrap">
+    <div class="input-box">
+      <textarea id="inp" placeholder="Peça uma ideia de conteúdo, calendário, legenda, estratégia..." rows="1"></textarea>
+      <button id="sbtn" onclick="send()">➤</button>
+    </div>
+    <div class="hint">Enter para enviar · Shift+Enter para nova linha</div>
+  </div>
+</main>
+
+<script>
+  // ⚠️ ALTERE PARA O ENDEREÇO DO SEU SERVIDOR FLASK
+  const BACKEND = "http://127.0.0.1:5000/chat";
+
+  let client = {}, history = [], busy = false;
+
+  function init() {
+    const name  = document.getElementById('m-name').value.trim();
+    const niche = document.getElementById('m-niche').value;
+    const goal  = document.getElementById('m-goal').value;
+    const ctx   = document.getElementById('m-ctx').value.trim();
+    if (!name || !niche || !goal) { alert('Preencha nome, nicho e objetivo!'); return; }
+    client = { name, niche, goal, ctx };
+    document.getElementById('pill-name').textContent = name;
+    document.getElementById('overlay').style.display = 'none';
+    addAgent(`Tudo pronto! Configurei minha análise para **${name}** — nicho de **${niche}**, foco em **${goal.toLowerCase()}**.\n\nUse os atalhos na lateral ou me diga o que precisa! 🚀`);
+  }
+
+  function systemPrompt() {
+    return `Você é um Estrategista Sênior de Redes Sociais especializado em criação de conteúdo de alto impacto.
+
+CLIENTE:
+- Nome/Marca: ${client.name}
+- Nicho: ${client.niche}
+- Objetivo: ${client.goal}
+- Contexto: ${client.ctx || 'não informado'}
+
+MISSÃO: Criar estratégias e ideias de conteúdo que:
+1. Gerem VALOR REAL para a audiência
+2. Fortaleçam autoridade e posicionamento da marca
+3. Incentivem engajamento genuíno (salvar, compartilhar, comentar)
+4. Sejam práticos de produzir
+5. Estejam alinhados com as tendências do segmento
+
+COMO RESPONDER:
+- Seja específico para o nicho, nunca genérico
+- Para Reels: inclua gancho (primeiros 3s), desenvolvimento e CTA
+- Para carrosséis: slide 1 (gancho) e estrutura dos slides
+- Para legendas: gancho, corpo, CTA e hashtags
+- Para calendários: organize por dia, formato e objetivo
+- Use formatação clara com títulos e listas
+- Responda em português brasileiro`;
+  }
+
+  async function send() {
+    const inp = document.getElementById('inp');
+    const txt = inp.value.trim();
+    if (!txt || busy) return;
+    addUser(txt);
+    inp.value = '';
+    inp.style.height = 'auto';
+    history.push({ role: 'user', content: txt });
+    await callBackend();
+  }
+
+  function quick(txt) {
+    document.getElementById('inp').value = txt;
+    send();
+  }
+
+  function tag(txt) {
+    const inp = document.getElementById('inp');
+    inp.value += (inp.value ? ' ' : '') + txt;
+    inp.focus();
+  }
+
+  async function callBackend() {
+    busy = true;
+    document.getElementById('sbtn').disabled = true;
+    const tid = addTyping();
+
+    try {
+      const res = await fetch(BACKEND, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: history, system: systemPrompt() })
+      });
+      const data = await res.json();
+      removeEl(tid);
+
+      if (data.error) throw new Error(data.error);
+
+      history.push({ role: 'assistant', content: data.reply });
+      addAgent(data.reply);
+    } catch (e) {
+      removeEl(tid);
+      addAgent(`⚠️ Erro: ${e.message}`);
+    }
+
+    busy = false;
+    document.getElementById('sbtn').disabled = false;
+  }
+
+  function addAgent(text) {
+    const msgs = document.getElementById('msgs');
+    const d = document.createElement('div');
+    d.className = 'msg agent';
+    d.innerHTML = `<div class="av ai">✦</div><div class="bbl">${fmt(text)}</div>`;
+    msgs.appendChild(d);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function addUser(text) {
+    const msgs = document.getElementById('msgs');
+    const d = document.createElement('div');
+    d.className = 'msg user';
+    d.innerHTML = `<div class="av me">👤</div><div class="bbl">${esc(text).replace(/\n/g,'<br>')}</div>`;
+    msgs.appendChild(d);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function addTyping() {
+    const msgs = document.getElementById('msgs');
+    const d = document.createElement('div');
+    d.className = 'msg agent';
+    const id = 'ty' + Date.now(); d.id = id;
+    d.innerHTML = `<div class="av ai">✦</div><div class="bbl typing-bbl"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+    msgs.appendChild(d);
+    msgs.scrollTop = msgs.scrollHeight;
+    return id;
+  }
+
+  function removeEl(id) { const e = document.getElementById(id); if (e) e.remove(); }
+
+  function fmt(t) {
+    return t
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+      .replace(/^#{1,3} (.+)/gm,'<h3>$1</h3>')
+      .replace(/^---$/gm,'<hr>')
+      .replace(/^[-•] (.+)/gm,'<li>$1</li>')
+      .replace(/(<li>[\s\S]*?<\/li>)/g,'<ul>$1</ul>')
+      .replace(/\n{2,}/g,'<br><br>').replace(/\n/g,'<br>');
+  }
+
+  function esc(t) {
+    return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  const inp = document.getElementById('inp');
+  inp.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 130) + 'px';
+  });
+  inp.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+</script>
+</body>
+</html>
